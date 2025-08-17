@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - role.updater.compute.io
+  resources:
+  - roleupdaters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - role.updater.compute.io
+  resources:
+  - roleupdaters/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - role.updater.compute.io
+  resources:
+  - roleupdaters/status
+  verbs:
+  - get
+  - patch
+  - update

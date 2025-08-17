@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- role.updater_v1_roleupdater.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

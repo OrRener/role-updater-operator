@@ -1,0 +1,9 @@
+apiVersion: role.updater.compute.io/v1
+kind: RoleUpdater
+metadata:
+  labels:
+    app.kubernetes.io/name: role-updater-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: roleupdater-sample
+spec:
+  # TODO(user): Add fields here
