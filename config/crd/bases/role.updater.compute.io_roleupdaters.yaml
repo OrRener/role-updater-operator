@@ -36,12 +36,22 @@ spec:
           metadata:
             type: object
           spec:
+            description: |-
+              Spc is a list of the desired state of the RoleUpdater. It has a single field, configMapRef, which is a reference to a configMap
+              in the cluster that contains the script that will be run every single clusterVersion change.
             properties:
               configMapRef:
+                description: |-
+                  ConfigMapRef is a field that contains the name and the namespace of the configMap that contains the script to be run
+                  when the clusterVersion changes.
                 properties:
                   name:
+                    description: Name is the name of the configMap that contains the script to be run when the clusterVersion changes.
                     type: string
                   namespace:
+                    description: |-
+                      Namespace is the name of the configMap that contains the script to be run when the clusterVersion changes.
+                      If left empty, it will default to the namespace of the RoleUpdater.
                     type: string
                 required:
                 - name
@@ -50,16 +60,22 @@ spec:
             - configMapRef
             type: object
           status:
+            description: Status defines the observed state of RoleUpdater.
             properties:
               clusterVersion:
+                description: The current clusterVersion fetched from the ClusterVersion resource. 
                 type: string
               configMapPresent:
+                description: A boolean value that indicates whether the configMap specified in spec.configMapRef is present in the cluster.
                 type: boolean
               lastCheckTime:
+                description: The last time the operator checked the clusterVersion resource.
                 type: string
               message:
+                description: An informative message indicating the status of the RoleUpdater.
                 type: string
               status:
+                description: A short string value indicating the status of the RoleUpdater.
                 type: string
             required:
             - configMapPresent
