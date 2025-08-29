@@ -56,6 +56,11 @@ spec:
                 required:
                 - name
                 type: object
+              forceRun:
+                description: |-
+                  ForceRun is an optional boolean field that, when set to true, forces the operator to run the script inside the configMap
+                  specified in .spec.configMapRef during the next reconciliation loop, regardless of whether the clusterVersion changed or not.
+                type: boolean
             required:
             - configMapRef
             type: object

@@ -12,6 +12,7 @@ type ConfigMapRef struct {
 
 type RoleUpdaterSpec struct {
 	ConfigMapRef ConfigMapRef `json:"configMapRef"`
+	ForceRun     bool         `json:"forceRun,omitempty"`
 }
 
 type RoleUpdaterStatus struct {
