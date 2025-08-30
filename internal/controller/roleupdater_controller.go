@@ -23,6 +23,7 @@ type RoleUpdaterReconciler struct {
 // +kubebuilder:rbac:groups=role.updater.compute.io,resources=roleupdaters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=config.openshift.io,resources=clusterversions,verbs=get
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+
 func (r *RoleUpdaterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
