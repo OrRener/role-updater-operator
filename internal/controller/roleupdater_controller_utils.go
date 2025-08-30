@@ -27,7 +27,7 @@ func (r *RoleUpdaterReconciler) checkIfConfigMapExists(ctx context.Context, inst
 		configMapRef.Namespace = instance.Namespace
 	}
 
-	if err := r.Get(ctx, client.ObjectKey{Name: configMap.Name, Namespace: configMapRef.Namespace}, configMap); err != nil {
+	if err := r.Get(ctx, client.ObjectKey{Name: configMapRef.Name, Namespace: configMapRef.Namespace}, configMap); err != nil {
 		return nil, err
 	}
 
@@ -40,4 +40,21 @@ func (r *RoleUpdaterReconciler) getClusterVersion(ctx context.Context) (string, 
 		return "", err
 	}
 	return clusterVersion.Status.Desired.Version, nil
+}
+
+func (r *RoleUpdaterReconciler) createAndUpdateStatus(ctx context.Context, instance *roleupdaterv1.RoleUpdater,
+	status, message, lastChecked, clusterVersion string, present bool) error {
+
+	instance.Status = roleupdaterv1.RoleUpdaterStatus{
+		Status:           status,
+		Message:          message,
+		LastCheckTime:    lastChecked,
+		ClusterVersion:   clusterVersion,
+		ConfigMapPresent: present,
+	}
+
+	if err := r.Status().Update(ctx, instance); err != nil {
+		return err
+	}
+	return nil
 }
