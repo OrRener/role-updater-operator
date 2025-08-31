@@ -2,13 +2,18 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	roleupdaterv1 "github.com/OrRener/role-updater-operator/api/v1"
 	configv1 "github.com/openshift/api/config/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func (r *RoleUpdaterReconciler) fetchInstance(ctx context.Context, req ctrl.Request) (*roleupdaterv1.RoleUpdater, error) {
@@ -57,4 +62,60 @@ func (r *RoleUpdaterReconciler) createAndUpdateStatus(ctx context.Context, insta
 		return err
 	}
 	return nil
+}
+
+func (r *RoleUpdaterReconciler) createJob(ctx context.Context, instance *roleupdaterv1.RoleUpdater, script string) error {
+
+	job := &batchv1.Job{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      instance.Name + "-job",
+			Namespace: "ocp-role-updater-controller",
+		},
+		Spec: batchv1.JobSpec{
+			TTLSecondsAfterFinished: func(i int32) *int32 { return &i }(10),
+			BackoffLimit:            func(i int32) *int32 { return &i }(3),
+			Template: corev1.PodTemplateSpec{
+				Spec: corev1.PodSpec{
+					ServiceAccountName: "role-updater-operator-controller-manager",
+					RestartPolicy:      corev1.RestartPolicyNever,
+					Containers: []corev1.Container{
+						{
+							Name:    instance.Name + "-container",
+							Image:   "quay.io/openshift/origin-cli:latest",
+							Command: []string{"/bin/sh", "-c"},
+							Args:    []string{fmt.Sprintf("%s | oc apply -f -", script)},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := controllerutil.SetControllerReference(instance, job, r.Scheme); err != nil {
+		return err
+	}
+
+	if err := r.Create(ctx, job); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *RoleUpdaterReconciler) getJobStaus(ctx context.Context, instance *roleupdaterv1.RoleUpdater) (string, error) {
+	job := &batchv1.Job{}
+	if err := r.Get(ctx, client.ObjectKey{Name: instance.Name + "-job", Namespace: "ocp-role-updater-controller"}, job); err != nil {
+		if apierrors.IsNotFound(err) {
+			return "Missing", nil
+		}
+		return "", err
+	}
+
+	if job.Status.Succeeded > 0 {
+		return "Succeeded", nil
+	} else if job.Status.Failed > 0 && job.Status.Failed >= *job.Spec.BackoffLimit {
+		return "Failed", nil
+	} else {
+		return "Running", nil
+	}
 }
